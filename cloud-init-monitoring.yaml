@@ -1,0 +1,13 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - docker.io
+  - docker-compose
+runcmd:
+  - systemctl start docker
+  - systemctl enable docker
+  - usermod -aG docker ubuntu
+  - mkdir -p /home/ubuntu/monitoring
+  - cp /home/ubuntu/docker-compose.monitoring.yml /home/ubuntu/monitoring/
+  - cd /home/ubuntu/monitoring && docker-compose -f docker-compose.monitoring.yml up -d 

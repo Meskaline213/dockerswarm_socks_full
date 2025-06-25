@@ -1,0 +1,4 @@
+yc_token    = "PASTE_YOUR_YC_TOKEN_HERE"
+yc_cloud_id = "PASTE_YOUR_CLOUD_ID_HERE"
+yc_folder_id = "PASTE_YOUR_FOLDER_ID_HERE"
+ssh_public_key = "ssh-rsa AAAA... user@host" 
