@@ -39,6 +39,12 @@ services:
     cap_add:
       - NET_BIND_SERVICE
     read_only: true
+    environment:
+      - MYSQL_HOST=catalogue-db
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=
+      - MYSQL_DATABASE=socksdb
   catalogue-db:
     image: weaveworksdemos/catalogue-db:0.3.0
     hostname: catalogue-db
