@@ -70,18 +70,15 @@ runcmd:
   - curl -o /home/ubuntu/grafana/import.sh https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/import.sh
   - chmod +x /home/ubuntu/grafana/import.sh
   
-  # Ждем подключения воркеров
+  # Ждём подключения воркеров
   - sleep 60
-  
-  # Развертываем Sock Shop
-  - cd /home/ubuntu/sock-shop && docker stack deploy -c docker-compose.yml sockshop
-  
-  # Развертываем логирование
-  - docker stack deploy -c docker-compose.logging.yml logging
-  
-  # Развертываем мониторинг
-  - docker stack deploy -c docker-compose.monitoring.yml monitoring
-  
+
+  # Деплой основного приложения
+  - docker stack deploy -c /home/ubuntu/sock-shop/docker-compose.yml sockshop
+
+  # Деплой мониторинга
+  - docker stack deploy -c /home/ubuntu/sock-shop/docker-compose.monitoring.yml monitoring
+
   # Проверяем статус сервисов
   - docker stack ls
   - docker service ls 
