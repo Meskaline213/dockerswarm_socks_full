@@ -14,12 +14,14 @@ services:
     ports:
       - '5601:5601'
   log-server:
-    image: weaveworksdemos/log-server
-    hostname: log-server
+    image: fluent/fluentd:v1.16-1
+    volumes:
+      - ./fluentd.conf:/fluentd/etc/fluent.conf
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
     depends_on:
       - elasticsearch
-    ports:
-      - '24224:24224'
   front-end:
     image: weaveworksdemos/front-end:0.3.12
     logging:
