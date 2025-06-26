@@ -18,6 +18,8 @@ services:
           - 9090:9090
         links:
           - alertmanager:alertmanager
+        networks:
+          - default
     nodeexporter:
         image: quay.io/prometheus/node-exporter:v1.1.2
         container_name: nodeexporter
@@ -49,6 +51,8 @@ services:
           - GF_USERS_ALLOW_SIGN_UP=false
         links:
           - prometheus:prometheus
+        networks:
+          - default
     importer:
       image: giantswarm/tiny-tools
       depends_on:
@@ -59,3 +63,8 @@ services:
         - ./grafana:/opt/grafana-import-dashboards
       links:
         - grafana:grafana
+
+networks:
+  default:
+    external: true
+    name: sockshop_default
