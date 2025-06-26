@@ -8,6 +8,14 @@ runcmd:
   - systemctl start docker
   - systemctl enable docker
   - usermod -aG docker ubuntu
-  - mkdir -p /home/ubuntu/monitoring
-  - cp /home/ubuntu/docker-compose.monitoring.yml /home/ubuntu/monitoring/
-  - cd /home/ubuntu/monitoring && docker-compose -f docker-compose.monitoring.yml up -d 
+  - cd /home/ubuntu
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.monitoring.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/prometheus.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/alert.rules
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/alertmanager.yml
+  - mkdir -p grafana
+  - curl -o grafana/import.sh https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/import.sh
+  - curl -o grafana/prometheus-datasource.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/prometheus-datasource.json
+  - curl -o grafana/prometheus-node-exporter-dashboard.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/prometheus-node-exporter-dashboard.json
+  - curl -o grafana/sock-shop-performance-dashboard.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/sock-shop-performance-dashboard.json
+  - docker-compose -f docker-compose.monitoring.yml up -d 

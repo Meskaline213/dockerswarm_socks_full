@@ -22,7 +22,7 @@ variable "yc_zone" {
 variable "yc_image_id" {
   description = "ID публичного образа Ubuntu 22.04 LTS в Yandex.Cloud"
   type        = string
-  default     = "fd8b8q8d8d8d8d8d8d8d" # замените на актуальный id
+  default     = "fd817i7o8012578061ra"
 }
 
 variable "ssh_public_key" {

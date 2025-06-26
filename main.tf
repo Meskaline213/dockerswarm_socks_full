@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    yandex = {
+      source = "yandex-cloud/yandex"
+      version = "~> 0.100"
+    }
+  }
+}
+
 provider "yandex" {
   token     = var.yc_token
   cloud_id  = var.yc_cloud_id
@@ -5,126 +14,211 @@ provider "yandex" {
   zone      = var.yc_zone
 }
 
-resource "yandex_vpc_network" "default" {}
+# Сеть
+resource "yandex_vpc_network" "default" {
+  name = "default"
+}
 
+# Подсеть
 resource "yandex_vpc_subnet" "default" {
-  zone           = var.yc_zone
+  name           = "default"
   network_id     = yandex_vpc_network.default.id
   v4_cidr_blocks = ["10.5.0.0/24"]
+  zone           = var.yc_zone
 }
 
-resource "yandex_compute_instance" "sockshop_vm" {
-  name        = "sockshop-vm"
-  platform_id = "standard-v1"
-  zone        = var.yc_zone
-
-  resources {
-    cores  = 2
-    memory = 4
-    core_fraction = 100
-  }
-
-  boot_disk {
-    initialize_params {
-      image_id = var.yc_image_id
-      size     = 20
-    }
-  }
-
-  network_interface {
-    subnet_id      = yandex_vpc_subnet.default.id
-    nat            = true
-    security_group_ids = [yandex_vpc_security_group.sockshop_sg.id]
-  }
-
-  metadata = {
-    user-data = file("cloud-init.yaml")
-    ssh-keys = "ubuntu:${var.ssh_public_key}"
-  }
-}
-
-resource "yandex_compute_instance" "monitoring_vm" {
-  name        = "monitoring-vm"
-  platform_id = "standard-v1"
-  zone        = var.yc_zone
-
-  resources {
-    cores  = 2
-    memory = 4
-    core_fraction = 100
-  }
-
-  boot_disk {
-    initialize_params {
-      image_id = var.yc_image_id
-      size     = 20
-    }
-  }
-
-  network_interface {
-    subnet_id      = yandex_vpc_subnet.default.id
-    nat            = true
-    security_group_ids = [yandex_vpc_security_group.monitoring_sg.id]
-  }
-
-  metadata = {
-    user-data = file("cloud-init-monitoring.yaml")
-    ssh-keys = "ubuntu:${var.ssh_public_key}"
-  }
-}
-
-resource "yandex_vpc_security_group" "sockshop_sg" {
-  name       = "sockshop-sg"
-  network_id = yandex_vpc_network.default.id
+# Security Group для Swarm Manager
+resource "yandex_vpc_security_group" "swarm_manager_sg" {
+  name        = "swarm-manager-sg"
+  description = "Security group for Swarm Manager"
+  network_id  = yandex_vpc_network.default.id
 
   ingress {
+    description    = "Allow SSH"
+    port           = 22
     protocol       = "TCP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     description    = "Allow HTTP"
     port           = 80
+    protocol       = "TCP"
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
-    protocol       = "TCP"
     description    = "Allow HTTPS"
     port           = 443
+    protocol       = "TCP"
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
-  egress {
-    protocol       = "ANY"
+
+  ingress {
+    description    = "Allow Swarm API"
+    port           = 2377
+    protocol       = "TCP"
     v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description    = "Allow join token HTTP"
+    port           = 8080
+    protocol       = "TCP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description    = "Allow Grafana"
+    port           = 3000
+    protocol       = "TCP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description    = "Allow Prometheus"
+    port           = 9090
+    protocol       = "TCP"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port      = 0
+    to_port         = 65535
+    protocol        = "ANY"
+    v4_cidr_blocks  = ["0.0.0.0/0"]
   }
 }
 
-resource "yandex_vpc_security_group" "monitoring_sg" {
-  name       = "monitoring-sg"
-  network_id = yandex_vpc_network.default.id
+# Security Group для Swarm Workers
+resource "yandex_vpc_security_group" "swarm_worker_sg" {
+  name        = "swarm-worker-sg"
+  description = "Security group for Swarm Workers"
+  network_id  = yandex_vpc_network.default.id
 
   ingress {
+    description    = "Allow SSH"
+    port           = 22
     protocol       = "TCP"
-    description    = "Allow Grafana"
-    port           = 3000
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
+    description    = "Allow HTTP"
+    port           = 80
     protocol       = "TCP"
-    description    = "Allow Prometheus"
-    port           = 9090
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
+    description    = "Allow HTTP Alt"
+    port           = 8080
     protocol       = "TCP"
-    description    = "Allow Alertmanager"
-    port           = 9093
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
+    description    = "Allow Swarm API"
+    port           = 2377
     protocol       = "TCP"
-    description    = "Allow Node Exporter"
-    port           = 9100
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
-    protocol       = "ANY"
-    v4_cidr_blocks = ["0.0.0.0/0"]
+    from_port      = 0
+    to_port         = 65535
+    protocol        = "ANY"
+    v4_cidr_blocks  = ["0.0.0.0/0"]
+  }
+}
+
+# Swarm Manager
+resource "yandex_compute_instance" "swarm_manager" {
+  name = "swarm-manager"
+  zone = var.yc_zone
+
+  resources {
+    cores  = 2
+    memory = 4
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.yc_image_id
+      size     = 20
+    }
+  }
+
+  network_interface {
+    subnet_id          = yandex_vpc_subnet.default.id
+    security_group_ids = [yandex_vpc_security_group.swarm_manager_sg.id]
+    nat                = true
+  }
+
+  metadata = {
+    user-data = file("${path.module}/cloud-init-manager.yaml")
+    ssh-keys  = "ubuntu:${var.ssh_public_key}"
+  }
+}
+
+# Swarm Worker 1
+resource "yandex_compute_instance" "swarm_worker1" {
+  name = "swarm-worker1"
+  zone = var.yc_zone
+
+  resources {
+    cores  = 2
+    memory = 4
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.yc_image_id
+      size     = 20
+    }
+  }
+
+  network_interface {
+    subnet_id          = yandex_vpc_subnet.default.id
+    security_group_ids = [yandex_vpc_security_group.swarm_worker_sg.id]
+    nat                = true
+  }
+
+  metadata = {
+    user-data = templatefile("${path.module}/cloud-init-worker.yaml", {
+      manager_ip = yandex_compute_instance.swarm_manager.network_interface[0].nat_ip_address
+    })
+    ssh-keys = "ubuntu:${var.ssh_public_key}"
+  }
+}
+
+# Swarm Worker 2
+resource "yandex_compute_instance" "swarm_worker2" {
+  name = "swarm-worker2"
+  zone = var.yc_zone
+
+  resources {
+    cores  = 2
+    memory = 4
+  }
+
+  boot_disk {
+    initialize_params {
+      image_id = var.yc_image_id
+      size     = 20
+    }
+  }
+
+  network_interface {
+    subnet_id          = yandex_vpc_subnet.default.id
+    security_group_ids = [yandex_vpc_security_group.swarm_worker_sg.id]
+    nat                = true
+  }
+
+  metadata = {
+    user-data = templatefile("${path.module}/cloud-init-worker.yaml", {
+      manager_ip = yandex_compute_instance.swarm_manager.network_interface[0].nat_ip_address
+    })
+    ssh-keys = "ubuntu:${var.ssh_public_key}"
   }
 } 

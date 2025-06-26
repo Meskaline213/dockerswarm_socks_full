@@ -7,4 +7,8 @@ packages:
 runcmd:
   - systemctl start docker
   - systemctl enable docker
-  - usermod -aG docker ubuntu 
+  - usermod -aG docker ubuntu
+  - cd /home/ubuntu
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.logging.yml
+  - docker-compose -f docker-compose.yml -f docker-compose.logging.yml up -d 

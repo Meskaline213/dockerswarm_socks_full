@@ -1,0 +1,92 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - git
+
+runcmd:
+  # Добавляем официальный GPG ключ Docker
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  
+  # Добавляем репозиторий Docker
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  
+  # Обновляем индекс пакетов
+  - apt-get update
+  
+  # Устанавливаем Docker
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  
+  # Запускаем и включаем Docker
+  - systemctl start docker
+  - systemctl enable docker
+  
+  # Добавляем пользователя ubuntu в группу docker
+  - usermod -aG docker ubuntu
+  
+  # Устанавливаем Docker Compose
+  - curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+  
+  # Создаем символическую ссылку
+  - ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+  
+  # Ждем немного для стабилизации
+  - sleep 30
+  
+  # Инициализируем Swarm кластер
+  - docker swarm init --advertise-addr $(hostname -I | awk '{print $1}')
+  
+  # Клонируем репозиторий sock-shop
+  - git clone https://github.com/Meskaline213/dockerswarm_socks_full.git /home/ubuntu/sock-shop
+  # Исправляем права на директорию
+  - chown -R ubuntu:ubuntu /home/ubuntu/sock-shop
+  
+  # Сохраняем токен для воркеров
+  - docker swarm join-token worker -q > /home/ubuntu/worker_token
+  
+  # Запускаем простой HTTP сервер для раздачи токена
+  - cd /home/ubuntu
+  - python3 -m http.server 8080 &
+  
+  # Скачиваем docker-compose файлы для Sock Shop
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.logging.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.monitoring.yml
+  
+  # Скачиваем конфигурации мониторинга
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/prometheus.yml
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/alert.rules
+  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/alertmanager.yml
+  
+  # Создаем директории для мониторинга
+  - mkdir -p /home/ubuntu/grafana
+  - mkdir -p /home/ubuntu/prometheus
+  
+  # Скачиваем дашборды Grafana
+  - curl -o /home/ubuntu/grafana/sock-shop-performance-dashboard.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/sock-shop-performance-dashboard.json
+  - curl -o /home/ubuntu/grafana/prometheus-node-exporter-dashboard.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/prometheus-node-exporter-dashboard.json
+  - curl -o /home/ubuntu/grafana/prometheus-datasource.json https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/prometheus-datasource.json
+  - curl -o /home/ubuntu/grafana/import.sh https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/grafana/import.sh
+  - chmod +x /home/ubuntu/grafana/import.sh
+  
+  # Ждем подключения воркеров
+  - sleep 60
+  
+  # Развертываем Sock Shop
+  - docker stack deploy -c docker-compose.yml sockshop
+  
+  # Развертываем логирование
+  - docker stack deploy -c docker-compose.logging.yml logging
+  
+  # Развертываем мониторинг
+  - docker stack deploy -c docker-compose.monitoring.yml monitoring
+  
+  # Проверяем статус сервисов
+  - docker stack ls
+  - docker service ls 
