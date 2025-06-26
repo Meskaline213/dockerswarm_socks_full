@@ -44,6 +44,8 @@ services:
       driver: fluentd
     depends_on:
       - log-server
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
   carts:
     image: weaveworksdemos/carts:0.4.8
     logging:
