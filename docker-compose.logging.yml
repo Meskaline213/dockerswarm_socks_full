@@ -54,6 +54,7 @@ services:
     depends_on:
       - log-server
   orders-db:
+    image: mongo:3.4
     logging:
       driver: fluentd
     depends_on:
