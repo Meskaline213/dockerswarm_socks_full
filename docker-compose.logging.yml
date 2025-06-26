@@ -19,36 +19,43 @@ services:
     ports:
       - '24224:24224'
   front-end:
+    image: weaveworksdemos/front-end:0.3.12
     logging:
       driver: fluentd
     depends_on:
       - log-server
   edge-router:
+    image: weaveworksdemos/edge-router:0.1.1
     logging:
       driver: fluentd
     depends_on:
       - log-server
   catalogue:
+    image: weaveworksdemos/catalogue:0.3.5
     logging:
       driver: fluentd
     depends_on:
       - log-server
   catalogue-db:
+    image: weaveworksdemos/catalogue-db:0.3.0
     logging:
       driver: fluentd
     depends_on:
       - log-server
   carts:
+    image: weaveworksdemos/carts:0.4.8
     logging:
       driver: fluentd
     depends_on:
       - log-server
   carts-db:
+    image: mongo:3.4
     logging:
       driver: fluentd
     depends_on:
       - log-server
   orders:
+    image: weaveworksdemos/orders:0.4.7
     logging:
       driver: fluentd
     depends_on:
@@ -60,36 +67,43 @@ services:
     depends_on:
       - log-server
   shipping:
+    image: weaveworksdemos/shipping:0.4.8
     logging:
       driver: fluentd
     depends_on:
       - log-server
   queue-master:
+    image: weaveworksdemos/queue-master:0.3.1
     logging:
       driver: fluentd
     depends_on:
       - log-server
   rabbitmq:
+    image: rabbitmq:3.6.8
     logging:
       driver: fluentd
     depends_on:
       - log-server
   payment:
+    image: weaveworksdemos/payment:0.4.3
     logging:
       driver: fluentd
     depends_on:
       - log-server
   user:
+    image: weaveworksdemos/user:0.4.4
     logging:
       driver: fluentd
     depends_on:
       - log-server
   user-db:
+    image: weaveworksdemos/user-db:0.4.0
     logging:
       driver: fluentd
     depends_on:
       - log-server
   user-sim:
+    image: weaveworksdemos/load-test:0.1.1
     logging:
       driver: fluentd
     depends_on:
