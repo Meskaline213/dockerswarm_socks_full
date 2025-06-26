@@ -185,8 +185,3 @@ services:
     read_only: true
     hostname: user-simulator
     command: "-d 60 -r 200 -c 2 -h edge-router"
-
-networks:
-  default:
-    external: true
-    name: sockshop_default
