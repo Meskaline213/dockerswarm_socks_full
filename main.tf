@@ -82,6 +82,33 @@ resource "yandex_vpc_security_group" "swarm_manager_sg" {
     v4_cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description    = "Swarm node communication TCP"
+    port           = 7946
+    protocol       = "TCP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Swarm node communication UDP"
+    port           = 7946
+    protocol       = "UDP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Overlay network traffic (VXLAN)"
+    port           = 4789
+    protocol       = "UDP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Ping (ICMP)"
+    protocol       = "ICMP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
   egress {
     from_port      = 0
     to_port         = 65535
@@ -122,6 +149,33 @@ resource "yandex_vpc_security_group" "swarm_worker_sg" {
     port           = 2377
     protocol       = "TCP"
     v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description    = "Swarm node communication TCP"
+    port           = 7946
+    protocol       = "TCP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Swarm node communication UDP"
+    port           = 7946
+    protocol       = "UDP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Overlay network traffic (VXLAN)"
+    port           = 4789
+    protocol       = "UDP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
+  }
+
+  ingress {
+    description    = "Ping (ICMP)"
+    protocol       = "ICMP"
+    v4_cidr_blocks = ["10.5.0.0/24"]
   }
 
   egress {
