@@ -2,10 +2,12 @@ version: '3'
 
 services:
   elasticsearch:
-    image: elasticsearch
+    image: cr.yandex/yc/elasticsearch:7.17.0
     hostname: elasticsearch
+    environment:
+      - discovery.type=single-node
   kibana:
-    image: kibana
+    image: cr.yandex/yc/kibana:7.17.0
     hostname: kibana
     depends_on:
       - elasticsearch
