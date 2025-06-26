@@ -54,11 +54,6 @@ runcmd:
   - cd /home/ubuntu
   - python3 -m http.server 8080 &
   
-  # Скачиваем docker-compose файлы для Sock Shop
-  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.yml
-  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.logging.yml
-  - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/docker-compose.monitoring.yml
-  
   # Скачиваем конфигурации мониторинга
   - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/prometheus.yml
   - curl -O https://raw.githubusercontent.com/Meskaline213/dockerswarm_socks_full/master/alert.rules
@@ -79,7 +74,7 @@ runcmd:
   - sleep 60
   
   # Развертываем Sock Shop
-  - docker stack deploy -c docker-compose.yml sockshop
+  - cd /home/ubuntu/sock-shop && docker stack deploy -c docker-compose.yml sockshop
   
   # Развертываем логирование
   - docker stack deploy -c docker-compose.logging.yml logging
