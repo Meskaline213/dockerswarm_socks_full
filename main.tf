@@ -193,13 +193,13 @@ resource "yandex_compute_instance" "swarm_manager" {
 
   resources {
     cores  = 2
-    memory = 4
+    memory = 8
   }
 
   boot_disk {
     initialize_params {
       image_id = var.yc_image_id
-      size     = 20
+      size     = 30
     }
   }
 
